@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XAJ | Jason Ralph G. Lopez</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0e1a2c;
+    --court:#15294a;
+    --panel:#182a47;
+    --line:#e8eef8;
+    --muted:#9fb1cc;
+    --sky:#6cc2ff;
+    --ball:#ff8a1f;
+    --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+    --body:"Instrument Sans","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0}
+  html{scroll-behavior:smooth;scroll-padding-top:64px}
+  body{background:var(--ink);color:var(--line);font-family:var(--body);font-size:1.05rem;line-height:1.6}
+  a{color:inherit}
+  :focus-visible{outline:3px solid var(--sky);outline-offset:3px;border-radius:6px}
+  button{font:inherit;color:inherit;cursor:pointer}
+
+  /* top bar */
+  .bar{position:fixed;inset:0 0 auto 0;z-index:10;display:flex;justify-content:space-between;align-items:center;
+    padding:.7rem clamp(1rem,4vw,3rem);background:rgba(14,26,44,.85);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.07)}
+  .bar strong{font-family:var(--display);font-weight:800;font-size:1.2rem;letter-spacing:.02em}
+  .bar nav{display:flex;gap:1.2rem;font-size:.95rem}
+  .bar nav a{text-decoration:none;color:var(--muted);padding:.2rem 0;border-bottom:2px solid transparent}
+  .bar nav a:hover{color:var(--line);border-color:var(--sky)}
+
+  /* hero */
+  .hero{position:relative;overflow:hidden;min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(1.5rem,4vw,4rem);
+    align-items:center;padding:6rem clamp(1rem,5vw,5rem) 3rem}
+  .hero::before{content:"";position:absolute;right:-18vw;top:50%;width:90vh;height:90vh;transform:translateY(-50%);
+    border:2px solid rgba(108,194,255,.14);border-radius:50%;pointer-events:none}
+  .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(108,194,255,.14)}
+  .hero-text{position:relative;z-index:1}
+  .greet{font-family:var(--display);font-weight:500;font-size:clamp(1.3rem,2.5vw,1.8rem);color:var(--sky);min-height:1.6em}
+  h1{font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,6.2vw,5rem);line-height:1;letter-spacing:-.02em;margin:.3rem 0 .6rem}
+  .nick{font-size:1.25rem;color:var(--muted);margin-bottom:1.2rem}
+  .intro{max-width:34rem;min-height:5.2em;font-size:1.15rem}
+  .seg{display:inline-flex;gap:.3rem;margin:1rem 0 1.4rem;padding:.25rem;background:var(--panel);border-radius:999px}
+  .seg button{background:none;border:0;padding:.4rem 1rem;border-radius:999px;color:var(--muted)}
+  .seg button[aria-pressed="true"]{background:var(--sky);color:#06213a;font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:.5rem;padding:0;list-style:none}
+  .chips li{padding:.3rem .8rem;border:1px solid rgba(255,255,255,.18);border-radius:999px;font-size:.95rem;color:var(--muted)}
+  .hero-text>*{animation:rise .7s both}
+  .hero-text>*:nth-child(2){animation-delay:.1s}.hero-text>*:nth-child(3){animation-delay:.2s}
+  .hero-text>*:nth-child(4){animation-delay:.3s}.hero-text>*:nth-child(5){animation-delay:.4s}.hero-text>*:nth-child(6){animation-delay:.5s}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  /* game */
+  .game{position:relative;z-index:1;background:var(--court);border-radius:22px;padding:1rem 1rem 1.2rem;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .game h2{font-family:var(--display);font-size:1.25rem;font-weight:800;margin:.2rem .3rem .2rem}
+  .game .how{font-size:.95rem;color:var(--muted);margin:0 .3rem .7rem}
+  canvas{display:block;width:100%;height:auto;border-radius:14px;background:#10213c;cursor:pointer;touch-action:manipulation}
+  .meter{position:relative;height:18px;margin:.9rem 0 .5rem;background:rgba(255,255,255,.1);border-radius:999px;overflow:hidden}
+  .zone{position:absolute;top:0;bottom:0;left:45%;width:20%;background:var(--ball);opacity:.9}
+  .needle{position:absolute;top:-2px;bottom:-2px;left:0;width:5px;margin-left:-2px;background:#fff;border-radius:3px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  .shoot{background:var(--ball);color:#2a1200;border:0;font-weight:600;padding:.55rem 1.4rem;border-radius:999px}
+  .shoot:active{transform:scale(.96)}
+  .score{display:flex;gap:1.2rem;font-size:.95rem;color:var(--muted)}
+  .score b{color:var(--line);font-size:1.2rem;font-family:var(--display)}
+  .msg{min-height:1.6em;margin:.6rem .3rem 0;font-weight:600}
+  .pips{display:flex;gap:.4rem;align-items:center;margin:.4rem .3rem 0;font-size:.9rem;color:var(--muted)}
+  .pips i{width:14px;height:14px;border-radius:50%;border:2px solid var(--ball);transition:background .25s}
+  .pips i.on{background:var(--ball)}
+  .pulse{animation:pulse .5s}
+  @keyframes pulse{40%{transform:scale(1.03) rotate(-.6deg)}}
+  .confetti{position:fixed;width:9px;height:9px;border-radius:2px;pointer-events:none;z-index:20}
+
+  /* sections */
+  main section{padding:clamp(3rem,8vw,6rem) clamp(1rem,5vw,5rem);max-width:1100px;margin:0 auto}
+  h2.title{font-family:var(--display);font-weight:800;font-size:clamp(1.8rem,3.5vw,2.6rem);letter-spacing:-.01em;margin-bottom:1.2rem}
+  .about{display:grid;grid-template-columns:260px 1fr;gap:2.5rem;align-items:center}
+  .photo{position:relative;width:260px;height:320px;border-radius:26px 26px 26px 120px;overflow:hidden;background:var(--panel);border:2px solid rgba(108,194,255,.4)}
+  .photo img{width:100%;height:100%;object-fit:cover;display:block}
+  .photo .mono{display:none;position:absolute;inset:0;place-items:center;font-family:var(--display);font-weight:800;font-size:4.5rem;color:var(--sky)}
+  .photo.nophoto img{display:none}
+  .photo.nophoto .mono{display:grid}
+  .about p+p{margin-top:1rem}
+  .about p{max-width:38rem}
+
+  .pick{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1.2rem}
+  .pick button{background:var(--panel);border:1px solid rgba(255,255,255,.12);padding:.55rem 1.1rem;border-radius:12px;transition:background .2s,transform .15s}
+  .pick button:hover{transform:translateY(-2px);border-color:var(--sky)}
+  .pick button[aria-pressed="true"]{background:var(--sky);color:#06213a;font-weight:600;border-color:var(--sky)}
+  .out{max-width:40rem;padding:1.1rem 1.3rem;border-left:4px solid var(--ball);background:var(--panel);border-radius:0 14px 14px 0;min-height:5.5rem}
+  .out strong{display:block;font-family:var(--display);font-size:1.2rem;margin-bottom:.2rem}
+
+  .notes-btn{background:none;border:2px solid var(--sky);color:var(--sky);padding:.6rem 1.3rem;border-radius:999px;font-weight:600}
+  .notes-btn:hover{background:var(--sky);color:#06213a}
+  .notes{margin-top:1.4rem;display:grid;gap:.8rem;max-width:46rem;padding:0;list-style:none}
+  .notes[hidden]{display:none}
+  .notes li{padding:.9rem 1.2rem;background:var(--panel);border-radius:14px}
+  .notes b{font-family:var(--display)}
+  .lead{max-width:38rem;color:var(--muted);margin-bottom:1.2rem}
+  /* basketball reel */
+  .reel{margin-top:2rem}
+  .reel[hidden]{display:none}
+  .reel h3{font-family:var(--display);font-weight:800;font-size:1.5rem}
+  .reel .sub{color:var(--muted);font-size:.95rem;margin:.2rem 0 1rem}
+  .strip{display:flex;gap:1rem;overflow-x:auto;scroll-snap-type:x mandatory;padding:.4rem .2rem 1rem;scrollbar-color:var(--sky) var(--panel)}
+  .frame{position:relative;flex:0 0 auto;height:clamp(280px,44vw,420px);padding:0;border:0;border-radius:16px;overflow:hidden;
+    scroll-snap-align:start;background:var(--panel);box-shadow:0 12px 30px rgba(0,0,0,.35);cursor:zoom-in}
+  .frame img{height:100%;width:auto;display:block;transition:transform .6s}
+  .frame:hover img,.frame:focus-visible img{transform:scale(1.04)}
+  dialog.lb{border:0;padding:0;background:transparent;max-width:96vw;max-height:96vh;overflow:visible;color:var(--line)}
+  dialog.lb::backdrop{background:rgba(5,10,20,.9)}
+  .lb figure{display:grid;gap:.7rem;justify-items:center}
+  .lb img{max-width:92vw;max-height:76vh;border-radius:12px;object-fit:contain}
+  .lb .ctl{display:flex;gap:.6rem;justify-content:center;margin-top:.7rem}
+  .lb .ctl button{background:var(--panel);border:1px solid rgba(255,255,255,.2);padding:.5rem 1.1rem;border-radius:999px}
+  .lb .ctl button:hover{border-color:var(--sky)}
+  footer{padding:2rem;text-align:center;color:var(--muted);font-size:.9rem;border-top:1px solid rgba(255,255,255,.07)}
+
+  @media (max-width:860px){
+    .hero{grid-template-columns:1fr;padding-top:5.5rem}
+    .about{grid-template-columns:1fr}
+    .bar nav{gap:.8rem;font-size:.85rem}
+    .bar nav a:nth-child(4){display:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <strong>XAJ</strong>
+  <nav aria-label="Page sections">
+    <a href="#about">About</a>
+    <a href="#skills">Skills</a>
+    <a href="#outside">Outside the code</a>
+    <a href="#notes">Design notes</a>
+  </nav>
+</div>
+
+<header class="hero" id="top">
+  <div class="hero-text">
+    <p class="greet" id="greet" aria-live="polite">Hello</p>
+    <h1 id="name">Jason Ralph G. Lopez</h1>
+    <p class="nick">Call me XAJ.</p>
+    <p class="intro" id="intro"></p>
+    <div class="seg" role="group" aria-label="Choose a language">
+      <button data-lang="en" aria-pressed="true">English</button>
+      <button data-lang="fil" aria-pressed="false">Filipino</button>
+      <button data-lang="ceb" aria-pressed="false">Cebuano</button>
+    </div>
+    <ul class="chips">
+      <li>BSIT, 3rd year</li>
+      <li>Philippines</li>
+      <li>C# and Visual Studio</li>
+    </ul>
+  </div>
+
+  <section class="game" aria-label="Free throw game">
+    <h2>Take a free throw</h2>
+    <p class="how">Tap the court or press Space when the needle is in the orange zone.</p>
+    <canvas id="court" width="480" height="340" aria-label="Basketball court with a hoop"></canvas>
+    <div class="meter" aria-hidden="true"><div class="zone"></div><div class="needle" id="needle"></div></div>
+    <div class="row">
+      <button class="shoot" id="shoot">Shoot</button>
+      <div class="score">
+        <span>Baskets <b id="made">0</b></span>
+        <span>Shots <b id="shots">0</b></span>
+        <span>Streak <b id="streak">0</b></span>
+      </div>
+    </div>
+    <p class="msg" id="msg" aria-live="polite">Score 3 baskets to open the design notes.</p>
+    <div class="pips" aria-hidden="true"><i></i><i></i><i></i></div>
+  </section>
+</header>
+
+<main>
+  <section id="about">
+    <h2 class="title">About me</h2>
+    <div class="about">
+      <div class="photo" id="photo">
+        <img src="photo.jpg" alt="Photo of Jason Ralph Lopez" id="photoImg">
+        <div class="mono" aria-hidden="true">XAJ</div>
+      </div>
+      <div>
+        <p>I’m Jason Ralph G. Lopez, a third-year BSIT student in the Philippines. Most people call me XAJ.</p>
+        <p>My projects so far are console programs and small web apps: a library loan system in C#, a records manager in Python, and a login app that I tested and documented in a report. I like making things that work, then making them easier to use.</p>
+        <p>I speak English, Filipino, and Cebuano, so you can read the intro at the top in any of them.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="skills">
+    <h2 class="title">What I build with</h2>
+    <p class="lead">Pick a tool to see what I’ve used it for.</p>
+    <div class="pick" id="skillPick" role="group" aria-label="Skills"></div>
+    <div class="out" id="skillOut" aria-live="polite"></div>
+  </section>
+
+  <section id="outside">
+    <h2 class="title">Outside the code</h2>
+    <p class="lead">When I’m not at the keyboard, I’m probably playing something.</p>
+    <div class="pick" id="hobbyPick" role="group" aria-label="Hobbies"></div>
+    <div class="out" id="hobbyOut" aria-live="polite"></div>
+
+    <div class="reel" id="reel">
+      <h3>Mayor’s Cup ’26</h3>
+      <p class="sub">San Fernando, Cebu. Scroll sideways, then tap a photo to enlarge it.</p>
+      <div class="strip">
+        <button class="frame">
+          <img src="images/team-photo.jpg" alt="The full San Fernando team and coaches posing on the court at center circle, with the arena crowd behind them">
+        </button>
+        <button class="frame">
+          <img src="images/timeout-huddle.jpg" alt="Players in white and yellow jerseys gathered around the coach, who holds a play clipboard during a timeout">
+        </button>
+        <button class="frame">
+          <img src="images/huddle.jpg" alt="Players locked arm in arm in a tight huddle, with the crowd and the game visible in the background">
+        </button>
+      </div>
+    </div>
+    <div class="reel" id="reelGames" hidden>
+      <h3>Mobile Legends on the big screen</h3>
+      <p class="sub">From the draft to the finals. Scroll sideways, then tap a photo to enlarge it.</p>
+      <div class="strip">
+        <button class="frame">
+          <img src="images/mlbb-draft.jpg" alt="A giant LED screen showing the Mobile Legends custom draft pick lobby with two teams facing each other">
+        </button>
+        <button class="frame">
+          <img src="images/mlbb-match.jpg" alt="A live Mobile Legends match on a large screen in a decorated covered court, with players seated at a table below">
+        </button>
+        <button class="frame">
+          <img src="images/mlbb-medals.jpg" alt="Five blue Champion medals from a Mobile Legends esports league lying on a table next to a fan of cash">
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="notes">
+    <h2 class="title">Design notes</h2>
+    <p class="lead">Why this page works the way it does. It opens by itself after 3 baskets, or you can open it now.</p>
+    <button class="notes-btn" id="notesBtn" aria-expanded="false" aria-controls="notesList">Open design notes</button>
+    <ul class="notes" id="notesList" hidden>
+      <li><b>Visibility of system status.</b> The needle, score, streak, and progress dots update on every action, so you always know what the game is doing.</li>
+      <li><b>Feedback.</b> Every shot gets a result message, a sound-free animation, and a score change. Makes also trigger confetti.</li>
+      <li><b>User control and freedom.</b> The game is optional. Scrolling and the top menu always work, and the notes open without scoring.</li>
+      <li><b>Recognition over recall.</b> Language, skills, and hobbies are labeled buttons. Nothing needs to be remembered or guessed.</li>
+      <li><b>Goal gradient.</b> Three dots show how close you are to unlocking the notes, which gives a reason to try again.</li>
+      <li><b>Visual hierarchy.</b> The hoop is the one loud element. Everything else is calm so it stays the focus.</li>
+      <li><b>Accessibility.</b> Keyboard play with Space, visible focus outlines, readable contrast, and reduced motion respected.</li>
+    </ul>
+  </section>
+</main>
+
+<dialog class="lb" id="lb" aria-label="Photo viewer">
+  <figure>
+    <img id="lbImg" src="" alt="">
+  </figure>
+  <div class="ctl">
+    <button id="lbPrev" aria-label="Previous photo">Previous</button>
+    <button id="lbNext" aria-label="Next photo">Next</button>
+    <button id="lbClose">Close</button>
+  </div>
+</dialog>
+
+<footer>Built with HTML, CSS, and JavaScript by Jason Ralph G. Lopez (XAJ).</footer>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const $ = s => document.querySelector(s);
+
+  /* ---------- Language switcher ---------- */
+  const LANGS = {
+    en:  {greet: "Hello",         intro: "I’m a third-year IT student who builds programs in C#, studies how people use software, and loves a good fast break."},
+    fil: {greet: "Kumusta",       intro: "Ikatlong taon na ako sa BSIT. Mahilig akong gumawa ng programa sa C# at maglaro ng basketbol sa libreng oras."},
+    ceb: {greet: "Maayong adlaw", intro: "Ikatulo na ko ka tuig sa BSIT. Gusto kong mag-code sa C# ug magdula og basketball inig free nako."}
+  };
+  const order = ["en", "ceb", "fil"];
+  let langIdx = 0, langTimer;
+  function setLang(key) {
+    $("#greet").textContent = LANGS[key].greet;
+    $("#intro").textContent = LANGS[key].intro;
+    document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === key));
+  }
+  document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+    clearInterval(langTimer);
+    setLang(b.dataset.lang);
+  }));
+  setLang("en");
+  langTimer = setInterval(() => { langIdx = (langIdx + 1) % order.length; setLang(order[langIdx]); }, 4500);
+
+  /* ---------- Photo fallback ---------- */
+  $("#photoImg").addEventListener("error", () => $("#photo").classList.add("nophoto"));
+  if ($("#photoImg").complete && $("#photoImg").naturalWidth === 0) $("#photo").classList.add("nophoto");
+
+  /* ---------- Picker builder (edit the text below to match yourself) ---------- */
+  const SKILLS = {
+    "C#": "My main language. I built a Library Loan Management System as a file-based console app.",
+    "Visual Studio": "My everyday editor for writing, running, and debugging C# projects.",
+    "Python": "I wrote a console Management Information System with add, delete, update, search, and display of records.",
+    "HTML, CSS, JavaScript": "I built a login, register, and logout web app, and this page you’re on right now.",
+    "Software testing": "I tested a web app against its requirements and documented the results in a testing report.",
+    "Node.js": "I used it with the docx library to generate formatted Word documents from code."
+  };
+  const HOBBIES = {
+    "Basketball": "The reason there’s a hoop at the top of this page. Did you hit three? Here are some frames from Mayor’s Cup ’26.",
+    "Volleyball": "Fast rallies, quick reactions, and teamwork.",
+    "Mobile games": "Quick feedback and smooth screens. Games are where I notice good and bad interface design. Here are some shots from a Mobile Legends event."
+  };
+  function picker(pickId, outId, data, onSelect) {
+    const wrap = $(pickId), out = $(outId);
+    const show = (name, btn) => {
+      if (onSelect) onSelect(name);
+      wrap.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b === btn));
+      out.innerHTML = "";
+      const t = document.createElement("strong"); t.textContent = name;
+      const p = document.createElement("span"); p.textContent = data[name];
+      out.append(t, p);
+    };
+    Object.keys(data).forEach((name, i) => {
+      const b = document.createElement("button");
+      b.textContent = name; b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => show(name, b));
+      wrap.appendChild(b);
+      if (i === 0) show(name, b);
+    });
+  }
+  picker("#skillPick", "#skillOut", SKILLS);
+  picker("#hobbyPick", "#hobbyOut", HOBBIES, name => { $("#reel").hidden = name !== "Basketball"; $("#reelGames").hidden = name !== "Mobile games"; });
+
+  /* ---------- Photo lightbox ---------- */
+  const lb = $("#lb");
+  let frames = [], cur = 0;
+  function showFrame(i) {
+    cur = (i + frames.length) % frames.length;
+    const im = frames[cur].querySelector("img");
+    $("#lbImg").src = im.src; $("#lbImg").alt = im.alt;
+  }
+  document.querySelectorAll(".frame").forEach(f => f.addEventListener("click", () => {
+    frames = [...f.closest(".strip").querySelectorAll(".frame")];
+    showFrame(frames.indexOf(f)); lb.showModal();
+  }));
+  $("#lbPrev").addEventListener("click", () => showFrame(cur - 1));
+  $("#lbNext").addEventListener("click", () => showFrame(cur + 1));
+  $("#lbClose").addEventListener("click", () => lb.close());
+  lb.addEventListener("click", e => { if (e.target === lb) lb.close(); });
+  lb.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") showFrame(cur - 1);
+    if (e.key === "ArrowRight") showFrame(cur + 1);
+  });
+
+  /* ---------- Design notes toggle ---------- */
+  function openNotes(open) {
+    $("#notesList").hidden = !open;
+    $("#notesBtn").setAttribute("aria-expanded", open);
+    $("#notesBtn").textContent = open ? "Hide design notes" : "Open design notes";
+  }
+  $("#notesBtn").addEventListener("click", () => openNotes($("#notesList").hidden));
+
+  /* ---------- Free throw game ---------- */
+  const cv = $("#court"), ctx = cv.getContext("2d");
+  const W = cv.width, H = cv.height, FLOOR = 300, R = 15;
+  const START = {x: 70, y: 270}, RIM = {x: 345, y: 160};
+  const ZLO = 0.45, ZHI = 0.65, FLIGHT = 900, ARC = 120, G = 0.0016;
+  let st = "ready", t0 = 0, shot = null, restAt = 0, last = performance.now(), flash = null;
+  const ball = {x: START.x, y: START.y, vx: 0, vy: 0, rot: 0};
+  let made = 0, shots = 0, streak = 0, unlocked = false;
+
+  const meterPos = now => { const t = (now / 850) % 2; return t < 1 ? t : 2 - t; };
+
+  function say(text) { $("#msg").textContent = text; }
+  function updateScore() {
+    $("#made").textContent = made; $("#shots").textContent = shots; $("#streak").textContent = streak;
+    document.querySelectorAll(".pips i").forEach((p, i) => p.classList.toggle("on", made > i));
+  }
+
+  function burst() {
+    if (reduce) return;
+    const r = cv.getBoundingClientRect();
+    const ox = r.left + r.width * (RIM.x / W), oy = r.top + r.height * (RIM.y / H);
+    const colors = ["#ff8a1f", "#6cc2ff", "#ffffff", "#ffc27a"];
+    for (let i = 0; i < 26; i++) {
+      const el = document.createElement("span");
+      el.className = "confetti";
+      el.style.left = ox + "px"; el.style.top = oy + "px";
+      el.style.background = colors[i % colors.length];
+      document.body.appendChild(el);
+      const a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 120;
+      el.animate([
+        {transform: "translate(0,0) rotate(0)", opacity: 1},
+        {transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d + 90}px) rotate(${Math.random() * 540}deg)`, opacity: 0}
+      ], {duration: 900 + Math.random() * 400, easing: "cubic-bezier(.2,.7,.3,1)"}).onfinish = () => el.remove();
+    }
+  }
+
+  function shoot() {
+    if (st !== "ready") return;
+    const p = meterPos(performance.now());
+    const ok = p >= ZLO && p <= ZHI;
+    let tx = RIM.x;
+    if (!ok) tx = p < ZLO ? RIM.x - 30 - (ZLO - p) * 320 : 376;
+    shot = {tx, ty: RIM.y, ok, early: p < ZLO};
+    shots++; st = "fly"; t0 = performance.now();
+    updateScore();
+  }
+
+  function land() {
+    const dx = shot.tx - START.x;
+    ball.vx = shot.ok ? 0.01 : (shot.early ? dx / FLIGHT * 0.3 : -0.12);
+    ball.vy = (shot.ty - START.y) / FLIGHT + 4 * ARC / FLIGHT;
+    st = "free";
+    if (shot.ok) {
+      made++; streak++;
+      const lines = ["Swish!", "Nothing but net.", "Clean.", "That’s three-for-three energy."];
+      say(lines[Math.min(made - 1, 3) % lines.length]);
+      flash = {text: "Swish!", at: performance.now()};
+      burst();
+      $("#name").classList.remove("pulse"); void $("#name").offsetWidth; $("#name").classList.add("pulse");
+      if (made === 3 && !unlocked) { unlocked = true; openNotes(true); say("Three baskets. The design notes are now open below."); }
+    } else {
+      streak = 0;
+      say(shot.early ? "Too early. Release when the needle is in the orange zone." : "Too late. Release a little sooner.");
+    }
+    updateScore();
+  }
+
+  function step(now) {
+    const dt = Math.min(32, now - last); last = now;
+    $("#needle").style.left = (meterPos(now) * 100) + "%";
+
+    if (st === "ready") {
+      ball.x = START.x; ball.y = START.y + Math.sin(now / 300) * 3; ball.rot = 0;
+    } else if (st === "fly") {
+      const t = (now - t0) / FLIGHT;
+      if (t >= 1) { land(); }
+      else {
+        ball.x = START.x + (shot.tx - START.x) * t;
+        ball.y = START.y + (shot.ty - START.y) * t - 4 * ARC * t * (1 - t);
+        ball.rot += dt * 0.012;
+      }
+    } else if (st === "free") {
+      ball.vy += G * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt; ball.rot += ball.vx * dt * 0.05;
+      if (ball.x < R) { ball.x = R; ball.vx *= -0.6; }
+      if (ball.x > W - R) { ball.x = W - R; ball.vx *= -0.6; }
+      if (ball.y > FLOOR - R) { ball.y = FLOOR - R; ball.vy *= -0.55; ball.vx *= 0.8; }
+      const resting = ball.y >= FLOOR - R - 0.5 && Math.abs(ball.vy) < 0.08;
+      if (resting) { if (!restAt) restAt = now; if (now - restAt > 500) { st = "ready"; restAt = 0; } }
+      else restAt = 0;
+    }
+    draw(now);
+    requestAnimationFrame(step);
+  }
+
+  function drawBall() {
+    ctx.save(); ctx.translate(ball.x, ball.y); ctx.rotate(ball.rot);
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fillStyle = "#ff8a1f"; ctx.fill();
+    ctx.strokeStyle = "#7a3300"; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(-R, 0); ctx.lineTo(R, 0); ctx.moveTo(0, -R); ctx.lineTo(0, R); ctx.stroke();
+    ctx.beginPath(); ctx.arc(-R * 1.2, 0, R * 0.95, -0.9, 0.9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(R * 1.2, 0, R * 0.95, Math.PI - 0.9, Math.PI + 0.9); ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw(now) {
+    ctx.clearRect(0, 0, W, H);
+    // floor
+    ctx.fillStyle = "#1b3560"; ctx.fillRect(0, FLOOR, W, H - FLOOR);
+    ctx.fillStyle = "rgba(108,194,255,.35)"; ctx.fillRect(0, FLOOR, W, 3);
+    // free throw line
+    ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.fillRect(START.x - 28, FLOOR + 14, 56, 3);
+    // shadow
+    ctx.fillStyle = "rgba(0,0,0,.3)";
+    ctx.beginPath(); ctx.ellipse(ball.x, FLOOR + 8, R * (1 - Math.min(.5, (FLOOR - ball.y) / 500)), 4, 0, 0, Math.PI * 2); ctx.fill();
+    // pole, arm, backboard
+    ctx.fillStyle = "#3a557f"; ctx.fillRect(416, 150, 8, FLOOR - 150); ctx.fillRect(386, 150, 34, 6);
+    ctx.fillStyle = "#e8eef8"; ctx.fillRect(378, 80, 8, 92);
+    ctx.fillStyle = "rgba(255,138,31,.9)"; ctx.fillRect(378, 138, 8, 22);
+
+    drawBall();
+
+    // net (drawn over ball so the ball seems to pass through)
+    ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 1.4;
+    const nx = [-28, -14, 0, 14, 28];
+    ctx.beginPath();
+    nx.forEach((o, i) => { ctx.moveTo(RIM.x + o, RIM.y); ctx.lineTo(RIM.x + o * 0.55, RIM.y + 36); });
+    [12, 24, 36].forEach(d => { const k = 1 - d / 36 * 0.45; ctx.moveTo(RIM.x - 28 * k, RIM.y + d); ctx.lineTo(RIM.x + 28 * k, RIM.y + d); });
+    ctx.stroke();
+    // rim
+    ctx.strokeStyle = "#ff8a1f"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(RIM.x - 28, RIM.y); ctx.lineTo(RIM.x + 28, RIM.y); ctx.stroke();
+
+    if (flash) {
+      const a = 1 - (now - flash.at) / 900;
+      if (a <= 0) flash = null;
+      else {
+        ctx.globalAlpha = a; ctx.fillStyle = "#ffffff"; ctx.font = "800 28px 'Bricolage Grotesque', system-ui, sans-serif";
+        ctx.textAlign = "center"; ctx.fillText(flash.text, RIM.x - 10, RIM.y - 40 - (1 - a) * 24);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  cv.addEventListener("pointerdown", shoot);
+  $("#shoot").addEventListener("click", shoot);
+  document.addEventListener("keydown", e => {
+    if (e.code === "Space" && e.target === document.body) { e.preventDefault(); shoot(); }
+  });
+
+  updateScore();
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>
